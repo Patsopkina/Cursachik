@@ -1,0 +1,48 @@
+#pragma once
+#include <iostream>
+#include <string.h>
+#include<windows.h>
+#include<locale.h>
+#include <conio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include<fstream>
+#include<vector>
+#include<iomanip >
+using namespace std;
+istream& getline(istream& is, string& str);
+void Entrance();//вход в систему
+void Sign_up();//регистрация в сети
+void Change();// изменение логина и пароля
+void delete_user();//удаление информации пользователя
+void Entrance_Admin();//вход для администратора
+void menuAdmin();
+void menuClient();
+int main();
+int nazad();//возвращение назад
+
+class User {
+public:
+    string name;
+    string password;
+
+    User(string n, string p) : name(n), password(p) {}
+    virtual ~User() {} // Виртуальный деструктор
+    bool authenticate(const string& enterName, const string& enterPassword) const {
+        return (name == enterName && password == enterPassword);
+    }
+};
+
+class Client : public User {
+public:
+    vector<string> accounts;
+    Client(string n, string p) : User(n, p) {}
+   
+};
+class Administrator : public User {
+public:
+    Administrator(const string& n, const string& p) : User(n, p) {}
+    bool isAdmin() const {
+        return true;
+    }
+};
