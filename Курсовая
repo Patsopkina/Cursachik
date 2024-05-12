@@ -1,0 +1,354 @@
+#include "header.h"
+
+void Entrance();//вход в систему
+void Sign_up();//регистрация в сети
+void Change();// изменение логина и пароля
+void delete_user();//удаление информации пользователя
+void saveClientsToFile(vector<Client>& clients, string user);//сохранение клиентов в файл
+void readClientsFromFile(vector<Client>& clients, string user);//чтение информации из файла
+void viewClients(const vector<Client>& clients);//просмотр клиентов
+void saveClientsToFile(vector<Client>& clients, string user) 
+{
+	ofstream file(user);
+	if (file.is_open()) 
+    {
+		for (const auto& client : clients) {
+			file << client.name << " " << client.password << "\n";
+			for (const auto& account : client.accounts) {
+				file << account << "\n";
+			}
+			file << "\n";
+		}
+		file.close();
+	}
+	else {
+		cout << "Unable to open file." << endl;
+	}
+}
+
+void readClientsFromFile(vector<Client>& clients, string user) {
+	ifstream file(user);
+	if (file.is_open()) {
+		string line;
+		while (getline(file, line)) {
+			if (line.empty()) {
+				clients.push_back(Client("", ""));
+			}
+			else if (clients.empty() || clients.back().name.empty()) {
+				vector<string> tokens;
+				size_t pos = 0;
+				while ((pos = line.find(" ")) != string::npos) {
+					tokens.push_back(line.substr(0, pos));
+					line.erase(0, pos + 1);
+				}
+				tokens.push_back(line);
+				clients.push_back(Client(tokens[0], tokens[1]));
+			}
+			else {
+				clients.back().accounts.push_back(line);
+			}
+		}
+		file.close();
+	}
+	else {
+		cout << "Unable to open file." << endl;
+	}
+}
+
+istream& getline(istream& is, string& str)
+{
+    return is ;
+}
+
+void Entrance()
+{
+    string login;
+    string password;
+
+    cout << "Введите свой логин: ";
+    cin >> login;
+    cout << endl;
+    cout << "Введите свой пароль: ";
+    char c;
+    while ((c = _getch()) != '\r') 
+    {
+        if (c == '\b') 
+        {
+            if (!password.empty()) 
+            {
+                cout << "\b \b"; 
+                password.pop_back(); 
+            }
+        }
+        else
+        {
+            cout << '*'; 
+            password.push_back(c); 
+        }
+    }
+    ifstream clientsFile("clients.txt");
+    if (clientsFile.is_open()) {
+        string storedLogin;
+        string storedPassword;
+        bool loginFound = false;
+
+        while (clientsFile >> storedLogin >> storedPassword) {
+            if (storedLogin == login && storedPassword == password) {
+                loginFound = true;
+                break;
+            }
+        }
+
+        if (loginFound) {
+            cout << "Вход выполнен успешно!" << endl;
+           	menuClient();
+        }
+        else {
+            cout << "Логин или пароль введены неверно!" << endl;
+        }
+
+        clientsFile.close();
+    }
+    else {
+        cout << "Ошибка открытия файла клиентов." << endl;
+    }
+}
+
+void Entrance_Admin()
+{
+    Administrator admin("admin", "password");
+
+    string enterName, enterPassword;
+   
+
+    cout << "Введите свой логин: ";
+    cin >> enterName;
+    cout << endl;
+    cout << "Введите свой пароль: ";
+    char c;
+    while ((c = _getch()) != '\r')
+    {
+        if (c == '\b')
+        {
+            if (!enterPassword.empty())
+            {
+                cout << "\b \b";
+                enterPassword.pop_back();
+            }
+        }
+        else
+        {
+            cout << '*';
+            enterPassword.push_back(c);
+        }
+    }
+
+   
+        if (admin.authenticate(enterName, enterPassword)) {
+            cout << "Вы успешно авторизованы как администратор!" << endl;
+            menuAdmin();
+        }
+        else {
+            cout << "Ошибка авторизации. Неверный логин или пароль." << endl;
+        }
+
+    
+}
+
+void Sign_up()
+{
+    string login;
+    string password;
+
+    cout << "Введите свой логин: ";
+    cin >> login;
+    cout << endl;
+    cout << "Введите свой пароль: ";
+    char c;
+    while ((c = _getch()) != '\r')
+    {
+        if (c == '\b')
+        {
+            if (!password.empty())
+            {
+                cout << "\b \b";
+                password.pop_back();
+            }
+        }
+        else
+        {
+            cout << '*';
+            password.push_back(c);
+        }
+    }
+   cout<< endl;
+
+    ofstream clientsFile("clients.txt", ofstream::app);
+    if (clientsFile.is_open()) {
+        clientsFile << login << " " << password << "\n";
+        clientsFile.close();
+        cout << "Регистрация прошла успешно!" << endl;
+        return;
+    }
+    else {
+        cout << "Ошибка открытия файла клиентов." << endl;
+        
+    }
+    return;
+}
+void Change()
+{
+    string login;
+    string password;
+
+    cout << "Введите свой логин: ";
+    cin >> login;
+    cout << endl;
+    cout << "Введите свой пароль: ";
+    cin >> password;
+
+    ifstream clientsFile("clients.txt");
+    if (clientsFile.is_open()) {
+        string storedLogin;
+        string storedPassword;
+        bool loginFound = false;
+
+        while (clientsFile >> storedLogin >> storedPassword) {
+            if (storedLogin == login && storedPassword == password) {
+                loginFound = true;
+                break;
+            }
+        }
+
+        if (loginFound)
+        {
+            string newLogin;
+            string newPassword;
+
+            cout << "Введите новый логин: ";
+            cin >> newLogin;
+            cout << endl;
+            cout << "Введите новый пароль: ";
+            cin >> newPassword;
+
+            ofstream tempFile("temp.txt");
+            ifstream originalFile("clients.txt");
+
+            while (originalFile >> storedLogin >> storedPassword)
+            {
+                if (storedLogin == login && storedPassword == password)
+                {
+                    tempFile << newLogin << " " << newPassword << endl;
+                }
+                else {
+                    tempFile << storedLogin << " " << storedPassword << endl;
+                }
+
+                tempFile.close();
+                originalFile.close();
+
+                remove("clients.txt");
+                rename("temp.txt", "clients.txt");
+
+                cout << "Информация успешно изменена!" << endl;
+            }
+        }
+        else {
+            cout << "Логин или пароль введены неверно!" << endl;
+        
+
+        clientsFile.close();
+        }
+    }
+        else {
+            cout << "Ошибка открытия файла клиентов." << endl;
+        }
+    
+}
+
+void delete_user()
+{
+    string login;
+    string password;
+
+    cout << "Введите логин пользователя, которого хотите удалить: ";
+    cin >> login;
+
+    ifstream clientsFile("clients.txt");
+    if (clientsFile.is_open()) {
+        string storedLogin;
+        string storedPassword;
+        bool loginFound = false;
+
+        while (clientsFile >> storedLogin >> storedPassword) {
+            if (storedLogin == login ) {
+                loginFound = true;
+                break;
+            }
+        }
+
+        if (loginFound)
+        {
+            ofstream tempFile("temp.txt");
+            ifstream originalFile("clients.txt");
+
+            while (originalFile >> storedLogin >> storedPassword)
+            {
+                if (storedLogin != login )
+                {
+                    tempFile << storedLogin << " " << storedPassword << endl;
+                }
+            }
+
+            tempFile.close();
+            originalFile.close();
+
+            remove("clients.txt");
+            rename("temp.txt", "clients.txt");
+
+            cout << "Информация о пользователе успешно удалена!" << endl;
+        }
+        else {
+            cout << "Логин введен неверно!" << endl;
+        }
+
+        clientsFile.close();
+    }
+    else {
+        cout << "Ошибка открытия файла клиентов." << endl;
+    }
+    nazad();
+}
+void viewClients(const vector<Client>& clients)
+{
+    ifstream clientsFile("clients.txt");
+    if (!clientsFile.is_open()) {
+        cout << "Ошибка при открытии файла." << endl;
+        return;
+    }
+
+    vector<Client> clientsData;
+    string name, password;
+    while (clientsFile >> name >> password) {
+        clientsData.push_back(Client(name, password));
+    }
+
+    clientsFile.close();
+
+    if (clientsData.empty()) {
+        cout << "Список клиентов пуст." << endl;
+        return;
+    }
+
+    cout << "--------------------------------" << endl;
+    cout << "Логин   | Пароль         " << endl;
+    cout << "--------------------------------" << endl;
+
+    for (const Client& client : clientsData) {
+        cout << client.name << " | " << client.password << endl;
+    }
+
+    cout << "--------------------------------" << endl;
+}
+
+
