@@ -1,0 +1,703 @@
+#include <limits>
+#include "header.h"
+#include <algorithm>
+#include<iomanip >
+
+struct Cake
+{
+	double price;//цена
+	int amount;//количество
+	string name;//название
+	int calories;//калории
+	int number;//номер
+};
+struct Product
+{
+	int amountP;//количество
+	int numberP;//номер
+	string nameP;//имя
+};
+
+
+
+void menuClient();//меню клиента
+void menuAdmin();//меню администратора
+void orderCakes();//заказ кексиков
+void addCake();//добавление новых кондитерсикх изделий
+void viewCake(const vector<Cake>& cakes);//таблица кондитерских изделий для просмотра
+void tableProduct();// работа с таблицей продуктов
+void updateProduct(const string& product);//пополнение продуктов
+void filter(); //фильтрация
+void sortName();//сортировка по названию
+void sortPrice();//сортировка по цене
+void foundCake();// поиск по названию
+void deleteCake();// удаление информации о изделии
+void addCake();//добавление новых кондитерсикх изделий
+void tableCake();// работа с таблицей изделий
+void viewProduct(const vector<Product>& products);//просмотр продуктов
+void foundPrice();// посик тортика по цене
+void foundCalories();// поиск в заданном диапозоне калорий
+void sortCalories();// сортировка по калориям 
+void viewClients(const vector<Client>& clients);//просмотр клиентов
+void printMenuItem(const string& item, bool isSelected);//подсветка выбора
+int main();//меню работы
+
+void printMenuItem(const string& item, bool isSelected)
+{
+	if (isSelected) {
+		cout << ">> " << item << " <<" << endl;
+	}
+	else {
+		cout << item << endl;
+	}
+}
+
+int main()//меню работы
+{
+	setlocale(LC_ALL, "rus");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	int choise;
+	cout << "====================Кондитерские изделия====================" << endl;
+	cout << "================Добро пожаловать в меню входа!==============" << endl;
+	cout << "======================Введите ваш выбор=====================\n 1 - Войти в систему;\n 2 - Зарегистрироваться в системе;\n 3 - Выход из программы;\n" << endl;
+	cin >> choise;
+	printMenuItem("1-Войти в систему;", choise == 1);
+	printMenuItem("2-Зарегистрироваться в системе;", choise == 2);
+	printMenuItem("3-Выход из программы;", choise == 3);
+
+	switch (choise)
+	{
+	case 1:
+		int role;
+		cout << "Выберите роль:\n 1-Клиент;\n 2-Администратор;\n" << endl;
+		cin >> role;
+		switch (role) {
+		case 1:
+			Entrance(); // вход клиента
+			break;
+		case 2:
+			Entrance_Admin(); // вход клиента
+			break;
+		}
+		break;
+	case 2:
+		Sign_up(); // регистрация
+		break;
+	case 3:
+		return 0;
+	}
+}
+
+void menuClient()//меню клиента
+{
+	int choise;
+	vector<Cake> cakes;
+	cout << "==================== Меню клиента ====================" << endl;
+	cout << "Введите ваш выбор:\n 1-Просмотр наличия продукции;\n 2-Заказ кондитерсикх изделий;\n 3-Изменение данных;\n 4-Фильтрация;\n 0- Вернуться назад;\n" << endl;
+	cin >> choise;
+	switch (choise) {
+	case 1:
+		viewCake(cakes);//просмотр тортиков
+		break;
+	case 2:orderCakes();//заказ тортиков
+		break;
+	case 3:Change();//изменение личных данных
+		break;
+	case 4:filter();//фильтрация
+		break;
+	case 0:
+		main();//главное меню
+		break;
+	}
+
+}
+
+void menuAdmin()//меню для администратора
+{
+	int choise;
+	vector<Client> clients;
+	cout << "==================== Меню администратора ====================" << endl;
+	cout << "Введите ваш выбор:\n 1- Работа с таблицей продуктов;\n 2- Работа с таблицей готовых кондитерских изделий;\n 3-Управление данными пользователей;\n 0- Вернуться назад;\n" << endl;
+	cin >> choise;
+	switch (choise) {
+	case 1:tableProduct();//работа с продуктами
+		break;
+	case 2:tableCake();//работа с изделиями
+		break;
+	case 3:
+		int y;
+		cout << "Введите ваш выбор:\n 1- Просмотр данных клиентов;\n 2-Удалить учётную запись  ;\n 0- Вернуться назад;" << endl;
+		cin >> y;
+		switch (y) {
+		case 1:cout << "==================== Просмотр учетных записей ====================" << endl;
+			viewClients(clients);//просмтор клиентов
+			break;
+		case 2:
+			cout << "==================== Удаление учетной записи ====================" << endl;
+			delete_user();//удаление клиентов
+			break;
+		}
+	case 0:
+		main();
+		break;
+	}
+}
+int nazad() {
+	int role = 0, choice = 0;
+	printf("Введите ваш выбор:\n 1 - Продолжить;\n 2 - Выйти из программы;\n >");
+	scanf_s("%d", &choice);
+	switch (choice)
+	{
+	case 1:
+		role = main();
+		switch (role) {
+		case 1:
+			menuClient();
+			break;
+		case 2:
+			menuAdmin();
+			break;
+		}
+	case 2:
+		exit(0);
+		break;
+	default:
+		printf("Некорректный выбор.\n");
+		break;
+	}
+}
+void viewProduct(const vector<Product>& products)
+{
+	vector<Product> productsList;
+
+	ifstream file("products.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	if (file.peek() == ifstream::traits_type::eof()) {
+		cout << "Файл не содержит информации." << endl;
+		file.close();
+		return;
+	}
+
+	Product product;
+	while (file >> product.numberP >> product.nameP >> product.amountP) {
+		productsList.push_back(product); // Добавляем считанный продукт в вектор
+	}
+
+	cout << "---------------------------------------" << endl;
+	cout << setw(6) << left << "Номер" << "| " << setw(15) << left << "Название" << "| " << "Количество" << endl;
+	cout << "---------------------------------------" << endl;
+
+	for (const Product& product : productsList) {
+		cout << setw(6) << left << product.numberP << "| " << setw(15) << left << product.nameP << "| " << product.amountP << endl;
+	}
+
+	cout << "---------------------------------------" << endl;
+
+	file.close();
+	nazad();
+}
+void viewCake(const vector<Cake>& cakes)
+{
+	vector<Cake> cakeslist;
+
+	ifstream file("cake.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	if (file.peek() == ifstream::traits_type::eof()) {
+		cout << "Файл не содержит информации." << endl;
+		file.close();
+		return;
+	}
+
+	Cake cake;
+	while (file >> cake.number >> cake.name >> cake.price >> cake.calories >> cake.amount) {
+		cakeslist.push_back(cake); // Добавляем считанное кондитерское изделие в вектор
+	}
+
+	cout << "--------------------------------------------------------------" << endl;
+	cout << setw(6) << left << "Номер" << "| " << setw(15) << left << "Название" << "| " << setw(10) << left << "Стоимость" << "| " << setw(13) << left << "Калорийность" << "| " << "Количество" << endl;
+	cout << "--------------------------------------------------------------" << endl;
+
+	for (const Cake& cake : cakeslist) {
+		cout << setw(6) << left << cake.number << "| " << setw(15) << left << cake.name << "| " << setw(10) << left << cake.price << "| " << setw(13) << left << cake.calories << "| " << cake.amount << endl;
+	}
+
+	cout << "--------------------------------------------------------------" << endl;
+
+	file.close();
+	nazad();
+}
+void tableProduct()// работа с таблицей продуктов
+{
+	int choise;
+	vector<Product> products;
+	string product = "product.txt";
+	cout << "==================== Работа с таблицей продуктов ====================" << endl;
+	cout << "Введите ваш выбор:\n 1- Просмотр наличия продуктов;\n 2- Заказ продуктов;\n 0- Вернуться назад;\n" << endl;
+	cin >> choise;
+	switch (choise) {
+	case 1:
+		viewProduct(products);//просмотр наличия
+		break;
+	case 2:
+		updateProduct(product);//добавление
+		break;
+	case 0:
+		nazad();
+		break;
+	}
+}
+
+void tableCake()// работа с таблицей изделий
+{
+	int choise;
+	vector<Cake> cakes;
+	cout << "==================== Работа с таблицей изделий ====================" << endl;
+	cout << "Введите ваш выбор:\n 1-Просмотр наличия изделий;\n 2-Добавление изделий;\n 3-Фильтрация;\n 0- Вернуться назад;\n" << endl;
+	cin >> choise;
+	switch (choise) {
+	case 1:
+		viewCake(cakes);
+		break;
+	case 2:
+		addCake();
+		break;
+	case 3:
+		filter();
+		break;
+	case 0:
+		menuAdmin();
+		break;
+	}
+}
+void updateProduct(const string& product) {
+	vector<Product> products;
+	int productNumber, newAmount;
+	bool productFound = false; // Флаг для отслеживания существования продукта в файле
+
+	cout << "Введите номер продукта для изменения количества: ";
+	cin >> productNumber;
+	
+
+	cout << "Введите новое количество продукта: ";
+	cin >> newAmount;
+
+	ifstream inputFile(product);
+	if (!inputFile.is_open()) {
+		cerr << "Ошибка при открытии файла: " << product << std::endl;
+		return;
+	}
+
+	// Считываем все продукты из файла
+	Product prod;
+	while (inputFile >> prod.numberP >> prod.nameP >> prod.amountP) {
+		products.push_back(prod);
+		// Проверяем, есть ли уже продукт с таким номером
+		if (prod.numberP == productNumber) {
+			productFound = true; // Продукт с таким номером найден
+		}
+	}
+	inputFile.close();
+
+	// Если такого продукта нет, то добавляем новый
+	if (!productFound) {
+		Product newProduct;
+		newProduct.numberP = productNumber;
+		cout << "Введите название нового продукта: ";
+		cin >> newProduct.nameP;
+		newProduct.amountP = newAmount;
+		products.push_back(newProduct);
+	}
+	else {
+		// Обновляем количество продукта, если он уже существует
+		for (Product& p : products) {
+			if (p.numberP == productNumber) {
+				p.amountP = newAmount;
+				break;
+			}
+		}
+	}
+
+	// Добавляем новую информацию о продукте в конец файла
+	ofstream outputFile(product, ios::out | ios::app);
+	if (!outputFile.is_open()) {
+		cerr << "Ошибка при открытии файла: " << product << std::endl;
+		return;
+	}
+	const Product& lastProduct = products.back();
+	outputFile << lastProduct.numberP << " " << lastProduct.nameP << " " << lastProduct.amountP << endl;
+	outputFile.close();
+
+	cout << "Информация о продуктах успешно обновлена." << endl;
+	viewProduct(products);
+}
+void filter() //фильтрация
+{
+	int choise;
+	cout << "==================== Фильтрация ====================" << endl;
+	cout << "Введите ваш выбор:\n 1- Сортировка по названию;\n 2- Сортировка по цене;\n 3-Поиск по названию;\n 0- Вернуться назад;\n" << endl;
+	cin >> choise;
+	switch (choise) {
+	case 1:sortName();
+		break;
+	case 2:
+		sortPrice();
+		break;
+	case 3:
+		foundCake();
+		break;
+	case 4:
+		foundCalories();
+		break;
+	case 5:
+		foundPrice();
+		break;
+	case 6:
+		sortCalories();
+		break;
+	case 0:
+
+		break;
+	}
+}
+bool compareByName(const Cake& a, const Cake& b) {
+	return a.name < b.name;
+}
+void sortName()//сортировка по названию
+{
+	fstream file("cake.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << std::endl;
+	}
+
+	vector<Cake> cakes;
+
+	Cake cake;
+	while (file >> cake.number >> cake.name >> cake.price >> cake.calories >> cake.amount) {
+		cakes.push_back(cake);
+	}
+
+	file.close();
+
+	// Сортировка по названию
+	sort(cakes.begin(), cakes.end(), compareByName);
+	// Вывод отсортированной таблицы на экран
+	viewCake(cakes);
+
+}
+bool compareByPrice(const Cake& a, const Cake& b) {
+	return a.price < b.price;
+}
+void sortPrice() {
+	fstream file("cake.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	vector<Cake> cakes;
+	Cake cake;
+	while (file >> cake.number >> cake.name >> cake.price >> cake.calories >> cake.amount) {
+		cakes.push_back(cake);
+	}
+
+	file.close();
+
+	// Сортировка по цене
+	sort(cakes.begin(), cakes.end(), compareByPrice);
+
+	viewCake(cakes);
+}
+bool compareByCalories(const Cake& a, const Cake& b) {
+	return a.calories > b.calories;
+}
+void sortCalories()
+{
+	fstream file("cake.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	vector<Cake> cakes;
+	Cake cake;
+	while (file >> cake.number >> cake.name >> cake.price >> cake.calories >> cake.amount) {
+		cakes.push_back(cake);
+	}
+
+	file.close();
+	// Сортировка по калориям
+	sort(cakes.begin(), cakes.end(), compareByCalories);
+
+	viewCake(cakes);
+}
+
+void foundCake()
+{
+	string name;
+	cout << "Введите название кондитерского изделия: ";
+	getline(cin, name);
+	ifstream file("cake.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	vector<Cake> cakes;
+	Cake cake;
+	bool found = false;
+
+	while (file >> cake.number >> cake.name >> cake.price >> cake.calories >> cake.amount) {
+		cakes.push_back(cake);
+		if (cake.name == name) {
+			found = true;
+		}
+	}
+
+	file.close();
+
+	if (!found) {
+		cout << "Изделие с названием '" << name << "' не найдено." << endl;
+		return;
+	}
+
+	// Вывод таблицы с информацией о найденном кондитерском изделии
+	cout << "Информация о кондитерском изделии с названием '" << name << "':" << endl;
+	cout << "----------------------------------------------------------------------" << endl;
+	cout << setw(6) << left << "Номер" << "| " << setw(15) << left << "Название" << "| " << setw(10) << left << "Стоимость" << "| " << setw(13) << left << "Калорийность" << "| " << "Количество" << endl;
+	cout << "----------------------------------------------------------------------" << endl;
+
+	for (const Cake& c : cakes) {
+		if (c.name == name) {
+			cout << setw(6) << left << c.number << "| " << setw(15) << left << c.name << "| " << setw(10) << left << c.price << "| " << setw(13) << left << c.calories << "| " << c.amount << endl;
+		}
+	}
+
+	cout << "----------------------------------------------------------------------" << endl;
+}
+void foundPrice()
+{
+	double price;
+	cout << "Введите цену кондитерского изделия: ";
+	cin >> price;
+	ifstream file("cake.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	vector<Cake> cakes;
+	Cake cake;
+	bool found = false;
+
+	while (file >> cake.number >> cake.name >> cake.price >> cake.calories >> cake.amount) {
+		cakes.push_back(cake);
+		if (cake.price == price) {
+			found = true;
+		}
+	}
+
+	file.close();
+
+	if (!found) {
+		cout << "Изделия с ценой '" << price << "' не найдены." << endl;
+		return;
+	}
+
+	// Вывод таблицы с информацией о найденных кондитерских изделиях
+	cout << "Информация о кондитерских изделиях с ценой '" << price << "':" << endl;
+	cout << "----------------------------------------------------------------------" << endl;
+	cout << setw(6) << left << "Номер" << "| " << setw(15) << left << "Название" << "| " << setw(10) << left << "Стоимость" << "| " << setw(13) << left << "Калорийность" << "| " << "Количество" << endl;
+	cout << "----------------------------------------------------------------------" << endl;
+
+	for (const Cake& c : cakes) {
+		if (c.price == price) {
+			cout << setw(6) << left << c.number << "| " << setw(15) << left << c.name << "| " << setw(10) << left << c.price << "| " << setw(13) << left << c.calories << "| " << c.amount << endl;
+		}
+	}
+
+	cout << "----------------------------------------------------------------------" << endl;
+}
+void foundCalories() {
+	int minCalories, maxCalories;
+	cout << "Введите минимальную калорийность: ";
+	cin >> minCalories;
+	cout << "Введите максимальную калорийность: ";
+	cin >> maxCalories;
+	fstream file("cake.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	vector<Cake> cakes;
+
+	Cake cake;
+	bool found = false;
+
+	while (file >> cake.number >> cake.name >> cake.price >> cake.calories >> cake.amount) {
+		if (cake.calories >= minCalories && cake.calories <= maxCalories) {
+			cakes.push_back(cake);
+			found = true;
+		}
+	}
+
+	file.close();
+
+	if (!found) {
+		cout << "Изделия с калорийностью в диапазоне от " << minCalories << " до " << maxCalories << " не найдены." << endl;
+		return;
+	}
+
+	// Вывод таблицы с информацией о найденных кондитерских изделиях
+	cout << "Информация о кондитерских изделиях с калорийностью в диапазоне от " << minCalories << " до " << maxCalories << ":" << endl;
+	cout << "----------------------------------------------------------------------" << endl;
+	cout << "Номер|\tНазвание|\tСтоимость|\tКалорийность|\tКоличество|" << endl;
+	cout << "----------------------------------------------------------------------" << endl;
+
+	for (const Cake& c : cakes) {
+		cout << c.number << "|\t" << c.name << "|\t" << c.price << "|\t" << c.calories << "|\t" << c.amount << endl;
+	}
+
+	cout << "----------------------------------------------------------------------" << endl;
+}
+
+void deleteCake()// удаление информации о изделии
+{
+	int number;
+	cout << "Введите номер кондитерского изделия: " << endl;
+	cin >> number;
+	ifstream infile("cake.txt");
+	if (!infile.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	vector<Cake> cakes;
+	Cake cake;
+	bool found = false;
+
+	while (infile >> cake.number >> cake.name >> cake.price >> cake.calories >> cake.amount) {
+		if (cake.number == number) {
+			found = true;
+		}
+		else {
+			cakes.push_back(cake);
+		}
+	}
+
+	infile.close();
+
+	if (!found) {
+		cout << "Изделие с номером " << number << " не найдено." << endl;
+		return;
+	}
+
+	ofstream outfile("cake.txt");
+	if (!outfile.is_open()) {
+		cout << "Ошибка при открытии файла для записи." << endl;
+		return;
+	}
+
+	for (const Cake& c : cakes) {
+		outfile << c.number << "\t" << c.name << "\t" << c.price << "\t" << c.calories << "\t" << c.amount << endl;
+	}
+
+	outfile.close();
+
+	cout << "Информация об изделии с номером " << number << " удалена." << endl;
+	viewCake(cakes);
+}
+void addCake()
+{
+	Cake newCake;
+	cout << "Введите данные нового кондитерского изделия:" << endl;
+	cout << "Номер: ";
+	cin >> newCake.number;
+	cout << "Название: ";
+	cin >> newCake.name;
+	cout << "Стоимость: ";
+	cin >> newCake.price;
+	cout << "Калорийность: ";
+	cin >> newCake.calories;
+	cout << "Количество: ";
+	cin >> newCake.amount;
+
+	ofstream file("cake.txt", ios::app);
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	file << newCake.number << "\t" << newCake.name << "\t" << newCake.price << "\t" << newCake.calories << "\t" << newCake.amount << endl;
+	file.close();
+
+	cout << "Изделие успешно добавлено." << endl;
+	nazad();
+}
+
+void orderCakes() //заказ пироженых
+{
+	vector<Cake> cakes;
+	int choice;
+	int quantity;
+	viewCake(cakes);
+	cout << "Выберите номер изделия для заказа: ";
+	cin >> choice;
+
+	cout << "Укажите количество: ";
+	cin >> quantity;
+
+	ifstream file("cake.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка при открытии файла." << endl;
+		return;
+	}
+
+	Cake cake;
+	while (file >> cake.number >> cake.name >> cake.price >> cake.calories >> cake.amount) {
+		cakes.push_back(cake);
+	}
+	file.close();
+
+	for (int i = 0; i < cakes.size(); i++) {
+		if (cakes[i].number == choice) {
+			if (cakes[i].amount >= quantity) {
+				// Уменьшаем количество изделий на складе
+				cakes[i].amount -= quantity;
+
+				// Обновляем файл с изделиями
+				ofstream outfile("cake.txt");
+				if (!outfile.is_open()) {
+					cout << "Ошибка при открытии файла для записи." << endl;
+					return;
+				}
+
+				for (int j = 0; j < cakes.size(); j++) {
+					outfile << cakes[j].number << " " << cakes[j].name << " " << cakes[j].price << " " << cakes[j].calories << " " << cakes[j].amount << endl;
+				}
+
+				outfile.close();
+
+				cout << "Заказ успешно оформлен! Изделий осталось: " << cakes[i].amount << endl;
+				return;
+			}
+			else {
+				cout << "Извините, недостаточное количество изделий на складе." << endl;
+				return;
+			}
+		}
+	}
+
+	cout << "Изделие с указанным номером не найдено." << endl;
+	nazad();
+}
+
