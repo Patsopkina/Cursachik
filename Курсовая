@@ -341,11 +341,11 @@ void viewClients(const vector<Client>& clients)
     }
 
     cout << "--------------------------------" << endl;
-    cout << "Логин   | Пароль         " << endl;
+    cout << setw(10) << left << "Логин" << "| " << setw(15) << left << "Пароль" << endl;
     cout << "--------------------------------" << endl;
 
     for (const Client& client : clientsData) {
-        cout << client.name << " | " << client.password << endl;
+        cout << setw(10) << left << client.name << "| " << setw(15) << left << client.password << endl;
     }
 
     cout << "--------------------------------" << endl;
