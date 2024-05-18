@@ -1,4 +1,5 @@
 #include "header.h"
+#include <openssl/sha.h>
 
 void Entrance();//вход в систему
 void Sign_up();//регистрация в сети
@@ -59,7 +60,30 @@ istream& getline(istream& is, string& str)
 {
     return is ;
 }
+string sha256(const std::string& str)
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    if (!SHA256_Init(&sha256))
+    {
+        return ""; // Ошибка инициализации хэш-контекста
+    }
+    if (!SHA256_Update(&sha256, str.c_str(), str.length()))
+    {
+        return ""; // Ошибка обновления хэш-контекста
+    }
+    if (!SHA256_Final(hash, &sha256))
+    {
+        return ""; // Ошибка завершения хэширования
+    }
 
+    std::stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+    }
+
+    return ss.str();
+}
 void Entrance()
 {
     string login;
@@ -70,22 +94,25 @@ void Entrance()
     cout << endl;
     cout << "Введите свой пароль: ";
     char c;
-    while ((c = _getch()) != '\r') 
+    while ((c = _getch()) != '\r')
     {
-        if (c == '\b') 
+        if (c == '\b')
         {
-            if (!password.empty()) 
+            if (!password.empty())
             {
-                cout << "\b \b"; 
-                password.pop_back(); 
+                cout << "\b \b";
+                password.pop_back();
             }
         }
         else
         {
-            cout << '*'; 
-            password.push_back(c); 
+            cout << '*';
+            password.push_back(c);
         }
     }
+
+    string encryptedPassword = sha256(password);
+
     ifstream clientsFile("clients.txt");
     if (clientsFile.is_open()) {
         string storedLogin;
@@ -93,18 +120,18 @@ void Entrance()
         bool loginFound = false;
 
         while (clientsFile >> storedLogin >> storedPassword) {
-            if (storedLogin == login && storedPassword == password) {
+            if (storedLogin == login && storedPassword == encryptedPassword) {
                 loginFound = true;
                 break;
             }
         }
 
         if (loginFound) {
-            cout << "Вход выполнен успешно!" << endl;
-           	menuClient();
+            cout << "\nВход выполнен успешно!" << endl;
+            menuClient();
         }
         else {
-            cout << "Логин или пароль введены неверно!" << endl;
+            cout << "\nЛогин или пароль введены неверно!" << endl;
         }
 
         clientsFile.close();
@@ -112,6 +139,7 @@ void Entrance()
     else {
         cout << "Ошибка открытия файла клиентов." << endl;
     }
+    return;
 }
 
 void Entrance_Admin()
@@ -145,56 +173,73 @@ void Entrance_Admin()
 
    
         if (admin.authenticate(enterName, enterPassword)) {
-            cout << "Вы успешно авторизованы как администратор!" << endl;
+            cout << "\nВы успешно авторизованы как администратор!" << endl;
             menuAdmin();
         }
         else {
-            cout << "Ошибка авторизации. Неверный логин или пароль." << endl;
+            cout << "\nОшибка авторизации. Неверный логин или пароль." << endl;
         }
-
+        return;
     
 }
 
-void Sign_up()
-{
+bool checkExistingLogin(const string& login) {
+    ifstream clientsFile("clients.txt");
+    if (clientsFile.is_open()) {
+        string storedLogin;
+        string storedPassword;
+        while (clientsFile >> storedLogin >> storedPassword) {
+            if (storedLogin == login) {
+                clientsFile.close();
+                return true; // Логин уже существует
+            }
+        }
+        clientsFile.close();
+    }
+    return false; // Логин не найден
+}
+
+
+void Sign_up() {
     string login;
     string password;
 
     cout << "Введите свой логин: ";
     cin >> login;
     cout << endl;
+
+    if (checkExistingLogin(login)) {
+        cout << "Пользователь с таким логином уже существует." << endl;
+        return;
+    }
+
     cout << "Введите свой пароль: ";
     char c;
-    while ((c = _getch()) != '\r')
-    {
-        if (c == '\b')
-        {
-            if (!password.empty())
-            {
+    while ((c = _getch()) != '\r') {
+        if (c == '\b') {
+            if (!password.empty()) {
                 cout << "\b \b";
                 password.pop_back();
             }
         }
-        else
-        {
+        else {
             cout << '*';
             password.push_back(c);
         }
     }
-   cout<< endl;
+    cout << endl;
+
+    string encryptedPassword = sha256(password);
 
     ofstream clientsFile("clients.txt", ofstream::app);
     if (clientsFile.is_open()) {
-        clientsFile << login << " " << password << "\n";
+        clientsFile << login << " " << encryptedPassword << "\n";
         clientsFile.close();
         cout << "Регистрация прошла успешно!" << endl;
-        return;
     }
     else {
         cout << "Ошибка открытия файла клиентов." << endl;
-        
     }
-    return;
 }
 void Change()
 {
@@ -243,27 +288,27 @@ void Change()
                 else {
                     tempFile << storedLogin << " " << storedPassword << endl;
                 }
-
-                tempFile.close();
-                originalFile.close();
-
-                remove("clients.txt");
-                rename("temp.txt", "clients.txt");
-
-                cout << "Информация успешно изменена!" << endl;
             }
+
+
+            remove("clients.txt");
+            rename("temp.txt", "clients.txt");
+
+            cout << "Информация успешно изменена!" << endl;
+            tempFile.close();
+            originalFile.close();
+            return;
         }
         else {
-            cout << "Логин или пароль введены неверно!" << endl;
-        
-
-        clientsFile.close();
+            cout << "\nЛогин или пароль введены неверно!" << endl;
+            return;
         }
     }
-        else {
-            cout << "Ошибка открытия файла клиентов." << endl;
-        }
-    
+    else {
+        cout << "\nОшибка открытия файла клиентов." << endl;
+    }
+
+    clientsFile.close();
 }
 
 void delete_user()
@@ -306,24 +351,26 @@ void delete_user()
             remove("clients.txt");
             rename("temp.txt", "clients.txt");
 
-            cout << "Информация о пользователе успешно удалена!" << endl;
+            cout << "\nИнформация о пользователе успешно удалена!" << endl;
         }
         else {
-            cout << "Логин введен неверно!" << endl;
+            cout << "\nЛогин введен неверно!" << endl;
+            return;
         }
 
-        clientsFile.close();
+        
     }
     else {
-        cout << "Ошибка открытия файла клиентов." << endl;
+        cout << "\nОшибка открытия файла клиентов." << endl;
+        return;
     }
-    nazad();
+    clientsFile.close();
 }
 void viewClients(const vector<Client>& clients)
 {
     ifstream clientsFile("clients.txt");
     if (!clientsFile.is_open()) {
-        cout << "Ошибка при открытии файла." << endl;
+        cout << "\nОшибка при открытии файла." << endl;
         return;
     }
 
@@ -336,7 +383,7 @@ void viewClients(const vector<Client>& clients)
     clientsFile.close();
 
     if (clientsData.empty()) {
-        cout << "Список клиентов пуст." << endl;
+        cout << "\nСписок клиентов пуст." << endl;
         return;
     }
 
